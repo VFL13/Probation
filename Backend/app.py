@@ -1,22 +1,22 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-# from marshmallow_sqlalchemy import ModelSchema
-from pprint import pprint
 
 from flask_cors import CORS
 import os
-import csv
 from datetime import datetime
-# configuration
+
 DEBUG = True
-# first = Activity('2019-11-05 14:55:17.706068503', 0.3, 0.2, 'A', -1.3, -4.3, 'left')
+
 app = Flask(__name__)
+
 CORS(app)
+
 app.config.from_object(__name__)
 path = os.path.dirname(os.path.realpath(__file__))
 database_path = os.path.join(path, 'mydb.sqlite')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{database_path}'
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
@@ -30,7 +30,17 @@ mouse_keys = db.Table('mouse_keys',
     db.Column('activity_id', db.Integer, db.ForeignKey('activity.id'), primary_key=True)
 )
 
+
 class Activity(db.Model):
+    ''' Gamer Activity Model
+       time -- datetime of measurement,
+       gaze_x -- x-coordinate of the users gaze;
+       gaze_y -- y-coordinate of the users gaze;
+       keys -- multiset of buttons pressed on keyboard (with duplicates);
+       mouse_dx -- mouse wheel delta along x coordinate (useless for majority of players);
+       mouse_dy -- mouse wheel delta along y coordinate (useless for majority of players);
+       mouse_keys -- multiset of buttons pressed on mouse  (with duplicates).
+    '''
     id = db.Column(db.Integer, primary_key=True)
     time = db.Column(db.DateTime, unique=False, nullable=False)
     nanoseconds = db.Column(db.String(3), nullable=False)
@@ -50,17 +60,21 @@ class Activity(db.Model):
         self.mouse_dy = mouse_dy
 
 
-    # def __repr__(self):
-    #     return f'<Action {self.time} {self.gaze_x} {self.gaze_y} {self.key} {self.mouse_dx} {self.mouse_dy} {self.mouse_key}>'
-
-
 class Key(db.Model):
+    ''' Keys -- multiset of buttons pressed on keyboard;
+        key - button
+        position - ordering
+    '''
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(20), nullable=True)
     position = db.Column(db.Integer, nullable=False)
 
 
 class MouseKey(db.Model):
+    ''' MouseKey -- multiset of buttons pressed on mouse;
+            mouse_key - button
+            position - ordering
+    '''
     id = db.Column(db.Integer, primary_key=True)
     mouse_key = db.Column(db.String(20), nullable=True)
     position = db.Column(db.Integer, nullable=False)
@@ -86,9 +100,22 @@ class ActivitySchema(ma.SQLAlchemyAutoSchema):
 
 @app.route('/', methods=['GET'])
 def get_activity():
+    ''' page - number of page pagination, default 1
+        per_page - records per page, default 10
+        start - start datetime, filter by time interval.
+        end - end datetime, filter by time interval.
+    '''
     page = 1 if request.args.get('page') is None else int(request.args.get('page'))
     per_page = 10 if request.args.get('per_page') is None else int(request.args.get('per_page'))
-    all_actions = Activity.query.order_by(Activity.time, Activity.nanoseconds) #Activity.time.desc()
+    start = request.args.get('start')
+    end = request.args.get('end')
+    all_actions = Activity.query.order_by(Activity.time, Activity.nanoseconds)
+    if start:
+        start = datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
+        all_actions = all_actions.filter(Activity.time >= start)
+    if end:
+        end = datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+        all_actions = all_actions.filter(Activity.time <= end)
     actions = all_actions.paginate(page, per_page, error_out=False)
     activity_schema = ActivitySchema(many=True)
     result = {'actions': activity_schema.dump(actions.items),
@@ -98,49 +125,5 @@ def get_activity():
               "total": actions.total}
     return jsonify(result)
 
-def initial_upload():
-    dir = "C:\git\Probation\Backend\static\\"
-    files = os.listdir(dir)
-    for file in files:
-        upload_to_db(file)
-
-def upload_to_db(filename):
-    with open(f'C:\git\Probation\Backend\static\{filename}', newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',',)
-        csv_headings = next(spamreader)
-        for row in spamreader:
-            if row != csv_headings:
-                print(row[0][:-3])
-                action_time = datetime.strptime(row[0][:-3], '%Y-%m-%d %H:%M:%S.%f')
-                key = row[3].replace('{', '').replace('}', '').replace("'", '').split(',')
-                mouse_key = row[6].replace('{', '').replace('}', '').replace("'", '').split(',')
-                action = Activity(action_time, row[0][-3:], float(row[1]), float(row[2]), float(row[4]), float(row[5]),)
-                keyObj_list = []
-                for i in range(0, len(key)):
-                    keyObj = Key.query.filter_by(key=key[i], position=i).first()
-                    if keyObj is None:
-                        if key[i] != '':
-                            keyObj = Key(key=key[i], position=i)
-                            db.session.add(keyObj)
-                            db.session.commit()
-                            keyObj_list.append(keyObj)
-                    if keyObj is not None:
-                        action.keys.append(keyObj)
-                mouse_keyObj_list = []
-                for i in range(0, len(mouse_key)):
-                    mouse_keyObj = MouseKey.query.filter_by(mouse_key=mouse_key[i], position=i).first()
-                    if mouse_keyObj is None:
-                        if mouse_key[i] != '':
-                            mouse_keyObj = MouseKey(mouse_key=mouse_key[i], position=i)
-                            db.session.add(mouse_keyObj)
-                            db.session.commit()
-                            mouse_keyObj_list.append(mouse_keyObj)
-                    if mouse_keyObj is not None:
-                        action.mouse_keys.append(mouse_keyObj)
-                db.session.add(action)
-                db.session.commit()
-
-
 if __name__ == '__main__':
-    #initial_upload()
     app.run()
