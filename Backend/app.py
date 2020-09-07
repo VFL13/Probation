@@ -98,43 +98,47 @@ def get_activity():
               "total": actions.total}
     return jsonify(result)
 
-# def initial_upload():
-#     dir = "C:\git\Probation\Backend\static\\"
-#     files = os.listdir(dir)
-#     for file in files:
-#         upload_to_db(file)
-#
-# def upload_to_db(filename):
-#     with open(f'C:\git\Probation\Backend\static\{filename}', newline='') as csvfile:
-#         spamreader = csv.reader(csvfile, delimiter=',',)
-#         csv_headings = next(spamreader)
-#         for row in spamreader:
-#             if row != csv_headings:
-#                 print(row[0][:-3])
-#                 action_time = datetime.strptime(row[0][:-3], '%Y-%m-%d %H:%M:%S.%f')
-#                 key = row[3].replace('{', '').replace('}', '').replace("'", '').split(',')
-#                 mouse_key = row[6].replace('{', '').replace('}', '').replace("'", '').split(',')
-#                 action = Activity(action_time, row[0][-3:], float(row[1]), float(row[2]), float(row[4]), float(row[5]),)
-#                 keyObj_list = []
-#                 for i in range(0, len(key)):
-#                     keyObj = Key.query.filter_by(key=key[i], position=i).first()
-#                     if keyObj is None:
-#                         keyObj = Key(key=key[i], position=i)
-#                         db.session.add(keyObj)
-#                         db.session.commit()
-#                         keyObj_list.append(keyObj)
-#                     action.keys.append(keyObj)
-#                 mouse_keyObj_list = []
-#                 for i in range(0, len(mouse_key)):
-#                     mouse_keyObj = MouseKey.query.filter_by(mouse_key=mouse_key[i], position=i).first()
-#                     if mouse_keyObj is None:
-#                         mouse_keyObj = MouseKey(mouse_key=mouse_key[i], position=i)
-#                         db.session.add(mouse_keyObj)
-#                         db.session.commit()
-#                         mouse_keyObj_list.append(mouse_keyObj)
-#                     action.mouse_keys.append(mouse_keyObj)
-#                 db.session.add(action)
-#                 db.session.commit()
+def initial_upload():
+    dir = "C:\git\Probation\Backend\static\\"
+    files = os.listdir(dir)
+    for file in files:
+        upload_to_db(file)
+
+def upload_to_db(filename):
+    with open(f'C:\git\Probation\Backend\static\{filename}', newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=',',)
+        csv_headings = next(spamreader)
+        for row in spamreader:
+            if row != csv_headings:
+                print(row[0][:-3])
+                action_time = datetime.strptime(row[0][:-3], '%Y-%m-%d %H:%M:%S.%f')
+                key = row[3].replace('{', '').replace('}', '').replace("'", '').split(',')
+                mouse_key = row[6].replace('{', '').replace('}', '').replace("'", '').split(',')
+                action = Activity(action_time, row[0][-3:], float(row[1]), float(row[2]), float(row[4]), float(row[5]),)
+                keyObj_list = []
+                for i in range(0, len(key)):
+                    keyObj = Key.query.filter_by(key=key[i], position=i).first()
+                    if keyObj is None:
+                        if key[i] != '':
+                            keyObj = Key(key=key[i], position=i)
+                            db.session.add(keyObj)
+                            db.session.commit()
+                            keyObj_list.append(keyObj)
+                    if keyObj is not None:
+                        action.keys.append(keyObj)
+                mouse_keyObj_list = []
+                for i in range(0, len(mouse_key)):
+                    mouse_keyObj = MouseKey.query.filter_by(mouse_key=mouse_key[i], position=i).first()
+                    if mouse_keyObj is None:
+                        if mouse_key[i] != '':
+                            mouse_keyObj = MouseKey(mouse_key=mouse_key[i], position=i)
+                            db.session.add(mouse_keyObj)
+                            db.session.commit()
+                            mouse_keyObj_list.append(mouse_keyObj)
+                    if mouse_keyObj is not None:
+                        action.mouse_keys.append(mouse_keyObj)
+                db.session.add(action)
+                db.session.commit()
 
 
 if __name__ == '__main__':
