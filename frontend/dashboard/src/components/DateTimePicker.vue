@@ -125,12 +125,13 @@
         name: "DateTimePicker",
         data() {
             return {
-                startDate: new Date('2019-11-05').toISOString().substr(0, 10),
-                endDate: new Date('2020-11-05').toISOString().substr(0, 10),
+                //TODO get min and amx datetime from API
+                startDate: new Date('2019-11-05').toISOString().substr(0, 10), //min date from data set
+                endDate: new Date('2020-11-05').toISOString().substr(0, 10), //min date from data set
                 startDateMenu: false,
                 endDateMenu: false,
-                startTime: '14:55:17',
-                endTime: '14:56:37',
+                startTime: '14:55:17', //min time from data set
+                endTime: '14:56:37', //min time from data set
                 startTimeMenu: false,
                 endTimeMenu: false
             }
@@ -139,7 +140,7 @@
             'startTime': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.filterDataByTimeRange();
+                        this.updateDateTimeRange();
                     }
                 },
                 deep: true
@@ -147,7 +148,7 @@
             'endTime': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.filterDataByTimeRange();
+                        this.updateDateTimeRange();
                     }
                 },
                 deep: true
@@ -155,7 +156,7 @@
             'startDate': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.filterDataByTimeRange();
+                        this.updateDateTimeRange();
                     }
                 },
                 deep: true
@@ -163,7 +164,7 @@
             'endDate': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.filterDataByTimeRange();
+                        this.updateDateTimeRange();
                     }
                 },
                 deep: true
@@ -171,10 +172,12 @@
         },
         methods: {
             applyNewDateTime() {
-                this.$emit('applyNewDateTime');
+                // emit update gamer activity with new datetime range
+                this.$emit('apply-new-dateTime');
             },
-            filterDataByTimeRange() {
-                this.$emit('updateTimeRange',
+            updateDateTimeRange() {
+                this.$emit('update-time-range',
+                    //emit update datetime range
                     `${this.startDate} ${this.startTime}`,
                     `${this.endDate} ${this.endTime}`);
             }

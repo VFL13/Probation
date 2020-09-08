@@ -114,7 +114,7 @@
             'options.page': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.$emit('tabelActions', newVal, this.options.itemsPerPage);
+                        this.$emit('change-pagination', newVal, this.options.itemsPerPage);
                     }
                 },
                 deep: true
@@ -129,7 +129,7 @@
             'options.itemsPerPage': {
                 handler: function (newVal, oldVal) {
                     if (newVal != oldVal) {
-                        this.$emit('tabelActions', this.options.page, this.options.itemsPerPage);
+                        this.$emit('change-pagination', this.options.page, this.options.itemsPerPage);
                     }
                 },
                 deep: true

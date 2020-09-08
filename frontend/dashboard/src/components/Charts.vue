@@ -94,7 +94,7 @@
                             }
                             this.notifications.push({
                                 'color': 'primary',
-                                'text': `Выбрано действие ${this.charDataGaze[selection[0]['row']]}.`
+                                'text': `Select action ${this.charDataGaze[selection[0]['row']]}.`
                             });
                             setTimeout(() => {
                                 this.notifications.shift();
@@ -115,7 +115,7 @@
                             }
                             this.notifications.push({
                                 'color': 'primary',
-                                'text': `Выбрано действие ${this.charDataMouse[selection[0]['row']]}.`
+                                'text': `Select action ${this.charDataMouse[selection[0]['row']]}.`
                             });
                             setTimeout(() => {
                                 this.notifications.shift();
